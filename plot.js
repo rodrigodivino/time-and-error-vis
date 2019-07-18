@@ -19,6 +19,15 @@ function draw(data) {
     .attr("height", innerHeight)
     .attr("fill", "none")
     .attr("stroke", "slategray");
+
+  const lineContainers = plot
+    .selectAll("g.lineContainer")
+    .data(["A", "B", "C"])
+    .join("g")
+    .classed("lineContainer", true)
+    .attr("transform", (_, i) => `translate(0,${(i * innerHeight) / 3})`);
+
+  const columnContainers = lineContainers.selectAll("g.columnContainer");
 }
 
 export { draw };
