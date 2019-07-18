@@ -23,23 +23,23 @@ function draw(data) {
     .attr("fill", "none")
     .attr("stroke", "slategray");
 
-  const lineContainers = plot
-    .selectAll("g.lineContainer")
-    .data(["A", "B", "C"].map(g => data.filter(d => d.group === g)))
-    .join("g")
-    .classed("lineContainer", true)
-    .attr("transform", (_, i) => `translate(0,${i * cellHeight})`);
-
-  const cell = lineContainers
-    .selectAll("g.cellContainer")
-    .data(gArr =>
+  const columnContainers = plot
+    .selectAll("g.columnContainer")
+    .data(
       [1, 3, 2, 5, 4, 6, 7, 8, 9, 10, 11, 12, 13].map(t =>
-        gArr.filter(d => d.task === t)
+        data.filter(d => d.task === t)
       )
     )
     .join("g")
-    .classed("cellContainer", true)
+    .classed("lineContainer", true)
     .attr("transform", (_, i) => `translate(${i * cellWidth},0)`);
+
+  const cell = columnContainers
+    .selectAll("g.cellContainer")
+    .data(gArr => ["A", "B", "C"].map(g => gArr.filter(d => d.group === g)))
+    .join("g")
+    .classed("cellContainer", true)
+    .attr("transform", (_, i) => `translate(0,${i * cellHeight})`);
 
   cell
     .append("rect")
@@ -49,8 +49,8 @@ function draw(data) {
     .attr("height", cellHeight);
 
   const cellPad = 2;
-  const correctnessCellWidth = cellWidth - cellPad * 2;
-  const correctnessCellHeight = cellHeight / 2 - cellPad * 2;
+  const halfCellWidth = cellWidth - cellPad * 2;
+  const halfCellHeight = cellHeight / 2 - cellPad * 2;
 
   const correctnessCell = cell
     .append("g")
@@ -60,17 +60,26 @@ function draw(data) {
     .join("rect")
     .classed("correct", true)
     .attr("x", (d, i) => {
-      return cellPad + Math.floor(i / 3) * (correctnessCellWidth / 4);
+      return cellPad + Math.floor(i / 3) * (halfCellWidth / 4);
     })
     .attr("y", (d, i) => {
-      return cellPad + (i % 3) * (correctnessCellHeight / 3);
+      return cellPad + (i % 3) * (halfCellHeight / 3);
     })
-    .attr("width", correctnessCellWidth / 4)
-    .attr("height", correctnessCellHeight / 3)
+    .attr("width", halfCellWidth / 4)
+    .attr("height", halfCellHeight / 3)
     .attr("stroke", "black")
     .attr("fill", d => {
       if (d.correctness) return "mediumseagreen";
       else return "firebrick";
+    });
+
+  const histogramCell = cell
+    .append("g")
+    .classed("histogramCell", true)
+    .attr("transform", `translate(0,${halfCellHeight})`)
+    .each(function(d) {
+      const parentData = d3.select(this.parentNode.parentNode).data();
+      console.log(parentData);
     });
 }
 
