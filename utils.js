@@ -8,4 +8,13 @@ function cleanData(d) {
   };
 }
 
-export { cleanData };
+function sortByBool(a, b) {
+  const x = a.correctness;
+  const y = b.correctness;
+  // true values first
+  return x === y ? 0 : x ? 1 : -1;
+  // false values first
+  // return (x === y)? 0 : x? 1 : -1;
+}
+
+export { cleanData, sortByBool };
