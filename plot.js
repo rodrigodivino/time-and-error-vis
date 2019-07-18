@@ -22,12 +22,17 @@ function draw(data) {
 
   const lineContainers = plot
     .selectAll("g.lineContainer")
-    .data(["A", "B", "C"])
+    .data(["A", "B", "C"].map(g => data.filter(d => d.group === g)))
     .join("g")
     .classed("lineContainer", true)
     .attr("transform", (_, i) => `translate(0,${(i * innerHeight) / 3})`);
 
-  const columnContainers = lineContainers.selectAll("g.columnContainer");
+  const columnContainers = lineContainers
+    .selectAll("g.columnContainer")
+    .data(gArr => d3.range(1, 14).map(t => gArr.filter(d => d.task === t)))
+    .join("g")
+    .classed("columnContainer", true)
+    .attr("transform", (_, i) => `translate(${i * (innerWidth / 13)},0)`);
 }
 
 export { draw };
