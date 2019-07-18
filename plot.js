@@ -1,3 +1,4 @@
+import { sortByBool } from "./utils.js";
 function draw(data) {
   const width = 1000;
   const height = 600;
@@ -31,7 +32,11 @@ function draw(data) {
 
   const cell = lineContainers
     .selectAll("g.cellContainer")
-    .data(gArr => d3.range(1, 14).map(t => gArr.filter(d => d.task === t)))
+    .data(gArr =>
+      [1, 3, 2, 5, 4, 6, 7, 8, 9, 10, 11, 12, 13].map(t =>
+        gArr.filter(d => d.task === t)
+      )
+    )
     .join("g")
     .classed("cellContainer", true)
     .attr("transform", (_, i) => `translate(${i * cellWidth},0)`);
@@ -51,19 +56,22 @@ function draw(data) {
     .append("g")
     .classed("correctnessCell", true)
     .selectAll("rect.correct")
-    .data(d => d)
+    .data(d => d.sort(sortByBool))
     .join("rect")
     .classed("correct", true)
     .attr("x", (d, i) => {
-      return cellPad;
+      return cellPad + Math.floor(i / 3) * (correctnessCellWidth / 4);
     })
     .attr("y", (d, i) => {
-      return cellPad;
+      return cellPad + (i % 3) * (correctnessCellHeight / 3);
     })
     .attr("width", correctnessCellWidth / 4)
     .attr("height", correctnessCellHeight / 3)
     .attr("stroke", "black")
-    .attr("fill", "red");
+    .attr("fill", d => {
+      if (d.correctness) return "mediumseagreen";
+      else return "firebrick";
+    });
 }
 
 export { draw };
