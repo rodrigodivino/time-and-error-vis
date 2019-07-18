@@ -1,8 +1,8 @@
 import { sortByBool } from "./utils.js";
 function draw(data) {
-  const width = window.innerWidth * 0.95;
-  const height = window.innerHeight * 0.95;
-  const margin = { top: 10, left: 10, right: 10, bottom: 10 };
+  const width = 1000;
+  const height = 600;
+  const margin = { top: 10, left: 10, right: 10, bottom: 50 };
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -123,6 +123,19 @@ function draw(data) {
         })
         .attr("fill", "steelblue")
         .attr("stroke", "black");
+    });
+
+  columnContainers
+    .append("g")
+    .classed("histAxis", true)
+    .attr("transform", `translate(0,${innerHeight})`)
+    .each(function(d) {
+      const extent = d3.extent(d, e => e.duration);
+      const x = d3
+        .scaleLinear()
+        .domain(extent)
+        .range([0, innerCellWidth]);
+      d3.select(this).call(d3.axisBottom(x).ticks(2));
     });
 }
 
