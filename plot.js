@@ -5,6 +5,8 @@ function draw(data) {
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
+  const cellHeight = innerHeight / 3;
+  const cellWidth = innerWidth / 13;
   const svg = d3
     .select("svg")
     .attr("width", width)
@@ -25,14 +27,43 @@ function draw(data) {
     .data(["A", "B", "C"].map(g => data.filter(d => d.group === g)))
     .join("g")
     .classed("lineContainer", true)
-    .attr("transform", (_, i) => `translate(0,${(i * innerHeight) / 3})`);
+    .attr("transform", (_, i) => `translate(0,${i * cellHeight})`);
 
-  const columnContainers = lineContainers
-    .selectAll("g.columnContainer")
+  const cell = lineContainers
+    .selectAll("g.cellContainer")
     .data(gArr => d3.range(1, 14).map(t => gArr.filter(d => d.task === t)))
     .join("g")
-    .classed("columnContainer", true)
-    .attr("transform", (_, i) => `translate(${i * (innerWidth / 13)},0)`);
+    .classed("cellContainer", true)
+    .attr("transform", (_, i) => `translate(${i * cellWidth},0)`);
+
+  cell
+    .append("rect")
+    .attr("fill", "snow")
+    .attr("stroke", "slategray")
+    .attr("width", cellWidth)
+    .attr("height", cellHeight);
+
+  const cellPad = 2;
+  const correctnessCellWidth = cellWidth - cellPad * 2;
+  const correctnessCellHeight = cellHeight / 2 - cellPad * 2;
+
+  const correctnessCell = cell
+    .append("g")
+    .classed("correctnessCell", true)
+    .selectAll("rect.correct")
+    .data(d => d)
+    .join("rect")
+    .classed("correct", true)
+    .attr("x", (d, i) => {
+      return cellPad;
+    })
+    .attr("y", (d, i) => {
+      return cellPad;
+    })
+    .attr("width", correctnessCellWidth / 4)
+    .attr("height", correctnessCellHeight / 3)
+    .attr("stroke", "black")
+    .attr("fill", "red");
 }
 
 export { draw };
