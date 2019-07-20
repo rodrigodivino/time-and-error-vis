@@ -1,13 +1,13 @@
 import { sortByBool } from "./utils.js";
 function draw(data) {
-  const width = 1000;
-  const height = 600;
+  const width = 3000;
+  const height = 300;
   const margin = { top: 10, left: 10, right: 10, bottom: 50 };
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
   const outerCellHeight = innerHeight / 3;
-  const outerCellWidth = innerWidth / 13;
+  const outerCellWidth = innerWidth / 13 -13*5; 
   const svg = d3
     .select("svg")
     .attr("width", width)
@@ -21,7 +21,7 @@ function draw(data) {
     .attr("width", innerWidth)
     .attr("height", innerHeight)
     .attr("fill", "none")
-    .attr("stroke", "slategray");
+    .attr("stroke", "none");
 
   const columnContainers = plot
     .selectAll("g.columnContainer")
@@ -32,7 +32,7 @@ function draw(data) {
     )
     .join("g")
     .classed("lineContainer", true)
-    .attr("transform", (_, i) => `translate(${i * outerCellWidth},0)`);
+    .attr("transform", (_, i) => `translate(${i * (outerCellWidth + 5)},0)`);
 
   const cell = columnContainers
     .selectAll("g.cellContainer")
@@ -41,15 +41,20 @@ function draw(data) {
     .classed("cellContainer", true)
     .attr("transform", (_, i) => `translate(0,${i * outerCellHeight})`);
 
+  
+
+  const innerCellWidth = outerCellWidth /2 - 5;
+  const innerCellHeight = outerCellHeight - 5;
+
   cell
     .append("rect")
     .attr("fill", "snow")
     .attr("stroke", "slategray")
-    .attr("width", outerCellWidth)
-    .attr("height", outerCellHeight);
-
-  const innerCellWidth = outerCellWidth;
-  const innerCellHeight = outerCellHeight / 2;
+    .attr('stroke-width', 2)
+    .attr('x', -1)
+    .attr('y', -1)
+    .attr("width", outerCellWidth - 3)
+    .attr("height", outerCellHeight -3);
 
   const correctnessCell = cell
     .append("g")
@@ -72,13 +77,13 @@ function draw(data) {
       else return "firebrick";
     });
 
-  const bins = 6;
+  const bins = 10;
   const barWidth = innerCellWidth / bins;
 
   const histogramCell = cell
     .append("g")
     .classed("histogramCell", true)
-    .attr("transform", `translate(0,${innerCellHeight})`)
+    .attr("transform", `translate(${innerCellWidth},0)`)
     .each(function(data) {
       const group = data[0].group;
       const parentData = d3.select(this.parentNode.parentNode).data()[0];
@@ -88,10 +93,14 @@ function draw(data) {
         .domain(extent)
         .range([0, innerCellWidth]);
 
+        
+      const horizon = 12;
+      const maxLayer = Math.floor(12/horizon)
+
       const y = d3
         .scaleLinear()
-        .domain([0, 12])
-        .range([0, innerCellHeight]);
+        .domain([0, horizon-1])
+        .range([innerCellHeight,0]);
 
       const max = x.domain()[1];
       const min = x.domain()[0];
@@ -103,40 +112,71 @@ function draw(data) {
         .thresholds(thresholds)
         .value(d => d.duration);
 
-      const rects = d3
+
+      const scheme = n => d3.interpolateBlues(n)
+      const fgColorFun = count => {
+        const fgLayer = Math.floor(count/horizon)
+    
+
+        const interpolate = d3.scaleLinear().domain([0,maxLayer]).range([0.2,1.2])
+        return d3.color(scheme(interpolate(fgLayer)))
+      }
+       
+
+      const bgColorFun = count => {
+        const bgLayer = Math.floor(count/horizon)-1
+        if(bgLayer<0) return 'snow'
+        const interpolate = d3.scaleLinear().domain([0,maxLayer]).range([0.2,1.2])
+        return d3.color(scheme(interpolate(bgLayer)))
+      }
+
+      const bgRetcs = d3
         .select(this)
-        .selectAll("rect.histBar")
+        .selectAll("rect.bgBar")
         .data(histogram(data))
         .join("rect")
-        .classed("histBar", true)
+        .classed("bgBar", true)
         .attr("x", arr => {
           return x(arr.x0);
         })
+        .attr("y", 0)
+        .attr("width", arr => {
+          return x(arr.x1) - x(arr.x0)+.8;
+        })
+        .attr("height", innerCellHeight)
+        .attr("fill", arr => {
+          return bgColorFun(arr.length)
+        })
+        .attr("stroke", "none");
+
+
+        const fgRetcs = d3
+        .select(this)
+        .selectAll("rect.fgBar")
+        .data(histogram(data))
+        .join("rect")
+        .classed("fgBar", true)
+        .attr("x", arr => {
+          return x(arr.x0) + (x(arr.x1) - x(arr.x0))*.20;
+        })
         .attr("y", arr => {
-          return innerCellHeight - y(arr.length);
+          return y(arr.length%horizon);
         })
         .attr("width", arr => {
-          return x(arr.x1) - x(arr.x0);
+          return (x(arr.x1) - x(arr.x0))*.60;
         })
         .attr("height", arr => {
-          return y(arr.length);
+          return innerCellHeight - y(arr.length%horizon);
         })
-        .attr("fill", "steelblue")
-        .attr("stroke", "black");
+        .attr("fill", arr => {
+          return fgColorFun(arr.length)
+        })
+        .attr("stroke", "none")
+        .attr('count', arr => arr.length)
+
     });
 
-  columnContainers
-    .append("g")
-    .classed("histAxis", true)
-    .attr("transform", `translate(0,${innerHeight})`)
-    .each(function(d) {
-      const extent = d3.extent(d, e => e.duration);
-      const x = d3
-        .scaleLinear()
-        .domain(extent)
-        .range([0, innerCellWidth]);
-      d3.select(this).call(d3.axisBottom(x).ticks(2));
-    });
+  
 }
 
 export { draw };
