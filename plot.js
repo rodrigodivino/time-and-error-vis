@@ -67,16 +67,16 @@ function draw(data) {
     const x = d3
       .scaleLinear()
       .domain(extent)
-      .range([0, verticalContainerWidth]);
+      .range([0, verticalContainerWidth + verticalContainerPad + 2]);
 
     const y = d3
       .scaleLinear()
-      .domain([0, 9])
+      .domain([0, 12])
       .range([violinPlotVerticalSpace / 6, 0]);
 
     const reverseY = d3
       .scaleLinear()
-      .domain([0, 9])
+      .domain([0, 12])
       .range([violinPlotVerticalSpace / 6, violinPlotVerticalSpace / 3]);
 
     const max = x.domain()[1];
@@ -90,34 +90,20 @@ function draw(data) {
       .value(d => d.duration);
 
     d3.select(this)
-      .selectAll("path.areaUp")
+      .selectAll("path.area")
       .data([histogram(data)])
       .join("path")
-      .classed("areaUp", true)
-      .attr("stroke", "none")
+      .classed("area", true)
+      .attr("stroke", "black")
+      .attr("fill-opacity", 0.3)
       .attr(
         "d",
         d3
           .area()
           .x(d => x(d.x0))
-          .y0(y(0))
-          .y1(d => y(d.length))
+          .y0(d => reverseY(d.length) + 5)
+          .y1(d => y(d.length) - 5)
           .curve(d3.curveMonotoneX)
-      );
-
-    d3.select(this)
-      .selectAll("path.areaBot")
-      .data([histogram(data)])
-      .join("path")
-      .classed("areaBot", true)
-      .attr("stroke", "none")
-      .attr(
-        "d",
-        d3
-          .area()
-          .x(d => x(d.x0))
-          .y0(y(0))
-          .y1(d => reverseY(d.length))
           .curve(d3.curveMonotoneX)
       );
   });
