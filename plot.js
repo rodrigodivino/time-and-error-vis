@@ -50,7 +50,8 @@ function draw(data) {
       "transform",
       (_, i) => `translate(0,${i * (violinPlotVerticalSpace / 3)})`
     )
-    .attr("fill", (_, i) => d3.schemeCategory10[i]);
+    .attr("fill", (_, i) => d3.schemeCategory10[i])
+    .attr("stroke", (_, i) => d3.schemeCategory10[i]);
 
   const tribells = verticalContainers
     .selectAll("g.tribellContainer")
@@ -59,7 +60,7 @@ function draw(data) {
     .classed("tribellContainer", true)
     .attr("transform", `translate(0,${violinPlotVerticalSpace})`);
 
-  const bins = 10;
+  const bins = 12;
   violinPlots.each(function(data) {
     const parentData = d3.select(this.parentNode).data()[0];
 
@@ -94,7 +95,7 @@ function draw(data) {
       .data([histogram(data)])
       .join("path")
       .classed("area", true)
-      .attr("stroke", "black")
+      .attr("stroke-width", 1.5)
       .attr("fill-opacity", 0.3)
       .attr(
         "d",
@@ -104,8 +105,32 @@ function draw(data) {
           .y0(d => reverseY(d.length) + 5)
           .y1(d => y(d.length) - 5)
           .curve(d3.curveMonotoneX)
-          .curve(d3.curveMonotoneX)
       );
+
+    const barHeight = 8;
+    const arrayData = data.map(d => d.duration).sort(d3.ascending);
+    d3.select(this)
+      .selectAll("rect.violinbar")
+      .data([arrayData])
+      .join("rect")
+      .classed("violinbar", true)
+      .attr("y", y(0) - barHeight / 2)
+      .attr("x", d => x(d3.quantile(d, 0.25)))
+      .attr("width", d => x(d3.quantile(d, 0.75)) - x(d3.quantile(d, 0.25)))
+      .attr("stroke", "black")
+      .attr("fill-opacity", 0.7)
+      .attr("height", barHeight);
+
+    d3.select(this)
+      .selectAll("circle.violinmedian")
+      .data([arrayData])
+      .join("circle")
+      .classed("violinmedian", true)
+      .attr("cy", y(0))
+      .attr("cx", d => x(d3.median(d)))
+      .attr("r", barHeight / 2)
+      .attr("fill", "white")
+      .attr("stroke", "black");
   });
 }
 
