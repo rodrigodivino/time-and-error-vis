@@ -1,0 +1,12 @@
+{
+  "name": "time-and-error-vis",
+  "version": "1.0.0",
+  "description": "A visualization of time and error for analysis of experimental data",
+  "main": "app.js",
+  "repository": "https://github.com/rodrigodivino/time-and-error-vis",
+  "author": "Rodrigo Divino",
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "^1.18.2"
+  }
+}
