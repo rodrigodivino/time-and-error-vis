@@ -1,3 +1,4 @@
+/*global d3*/
 import { cleanData } from "./utils.js";
 import { draw } from "./plot.js";
 
