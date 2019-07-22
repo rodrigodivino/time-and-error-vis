@@ -42,7 +42,7 @@ function draw(data) {
   const accuracyContainerWidth = verticalContainerWidth;
   const accuracyContainerHeight =
     0.5 * verticalContainerHeight - verticalContainerPad / 2;
-  const accuracyContainers = verticalContainer
+  const accuracyContainers = verticalContainers
     .append("g")
     .attr(
       "transform",
@@ -57,8 +57,8 @@ function draw(data) {
 
   timeContainers
     .append("rect")
-    .attr("width", timeContainerWidth)
-    .attr("height", timeContainerHeight)
+    .attr("width", accuracyContainerWidth)
+    .attr("height", accuracyContainerHeight)
     .attr("fill", "steelblue");
 
   verticalContainers
