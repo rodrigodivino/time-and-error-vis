@@ -39,7 +39,6 @@ function boot(arr, reducer) {
 
 function getCI(arr) {
   const means = boot(arr, d3.mean).sort(d3.ascending);
-  console.log("means", means);
   return [d3.quantile(means, 0.025), d3.quantile(means, 0.975)];
 }
 

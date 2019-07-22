@@ -1,7 +1,8 @@
 /* global d3 */
+import { getCI } from "./utils.js";
 function draw(data) {
-  const width = 200;
-  const height = 1000;
+  const width = 400;
+  const height = 1400;
   const margin = { top: 10, left: 10, right: 10, bottom: 50 };
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
@@ -81,7 +82,7 @@ function draw(data) {
       return d3.mean(data.map(d => d.duration));
     })
     .attr("fill", (_, i) => d3.schemeCategory10[i])
-    .attr("stroke", "black")
+    .attr("stroke", (_, i) => d3.schemeCategory10[i])
     .attr("group", d => {
       return d[0]["group"];
     });
@@ -90,7 +91,8 @@ function draw(data) {
     .append("rect")
     .attr("width", timeEnvContainerWidth)
     .attr("height", timeEnvContainerHeight)
-    .attr("fill", "snow");
+    .attr("fill", "white")
+    .attr("stroke", "black");
 
   timeEnvContainers.each(function(data) {
     const dataArr = data.map(d => d.duration);
@@ -113,18 +115,32 @@ function draw(data) {
       .data([dataArr])
       .join("rect")
       .each(function(arr) {
-        console.log(arr);
+        const rect = d3.select(this);
+        const [ciLow, ciHigh] = getCI(arr);
+        const xPos = x(ciLow) < 0 ? 0 : x(ciLow);
+        const width =
+          x(ciHigh) > timeEnvContainerWidth
+            ? timeEnvContainerWidth - xPos
+            : x(ciHigh) - xPos;
+
+        rect
+          .attr("x", xPos)
+          .attr("width", width)
+          .attr("height", timeEnvContainerHeight)
+          .attr("fill-opacity", 0.8)
+          .attr("stroke", "none");
       });
 
     d3.select(this)
       .selectAll("circle.mean")
       .data([dataArr])
       .join("circle")
-      .attr("fill-opacity", 0.5)
+      .attr("fill-opacity", 1)
       .classed("mean", true)
       .attr("r", meanRadius)
       .attr("cx", d => x(d3.mean(d)))
-      .attr("cy", timeEnvContainerHeight / 2);
+      .attr("cy", timeEnvContainerHeight / 2)
+      .attr("stroke", "black");
 
     d3.select(this)
       .selectAll("text.mean")
