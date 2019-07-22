@@ -16,6 +16,7 @@ function draw(data) {
 
   const verticalContainerPad = 5;
   const verticalContainerWidth = innerWidth / 13 - verticalContainerPad;
+  const verticalContainerHeight = innerHeight;
   const verticalContainers = plot
     .selectAll("g.verticalContainer")
     .data(
@@ -30,6 +31,35 @@ function draw(data) {
       (_, i) =>
         `translate(${i * (verticalContainerWidth + verticalContainerPad)},0)`
     );
+
+  const timeContainerWidth = verticalContainerWidth;
+  const timeContainerHeight =
+    0.5 * verticalContainerHeight - verticalContainerPad / 2;
+  const timeContainers = verticalContainers
+    .append("g")
+    .classed("timeContainers", true);
+
+  const accuracyContainerWidth = verticalContainerWidth;
+  const accuracyContainerHeight =
+    0.5 * verticalContainerHeight - verticalContainerPad / 2;
+  const accuracyContainers = verticalContainer
+    .append("g")
+    .attr(
+      "transform",
+      `translate(0,${0.5 * verticalContainerHeight + verticalContainerPad / 2})`
+    );
+
+  accuracyContainers
+    .append("rect")
+    .attr("width", timeContainerWidth)
+    .attr("height", timeContainerHeight)
+    .attr("fill", "firebrick");
+
+  timeContainers
+    .append("rect")
+    .attr("width", timeContainerWidth)
+    .attr("height", timeContainerHeight)
+    .attr("fill", "steelblue");
 
   verticalContainers
     .append("rect")
