@@ -1,5 +1,5 @@
 /* global d3 */
-import { getCI } from "./utils.js";
+import { getCI, sortByBool } from "./utils.js";
 function draw(data) {
   const width = 400;
   const height = 1400;
@@ -15,9 +15,10 @@ function draw(data) {
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  const rootContainerPad = 30;
+  const rootContainerVerticalPad = 30;
+  const rootContainerHorizontalPad = 5;
   const rootContainerWidth = innerWidth;
-  const rootContainerHeight = innerHeight / 13 - rootContainerPad;
+  const rootContainerHeight = innerHeight / 13 - rootContainerVerticalPad;
   const rootContainers = plot
     .selectAll("g.rootContainer")
     .data(
@@ -29,23 +30,26 @@ function draw(data) {
     .classed("rootContainer", true)
     .attr(
       "transform",
-      (_, i) => `translate(0,${i * (rootContainerHeight + rootContainerPad)})`
+      (_, i) =>
+        `translate(0,${i * (rootContainerHeight + rootContainerVerticalPad)})`
     );
 
-  const timeContainerWidth = 0.5 * rootContainerWidth - rootContainerPad / 2;
+  const timeContainerWidth =
+    0.5 * rootContainerWidth - rootContainerHorizontalPad / 2;
   const timeContainerHeight = rootContainerHeight;
   const timeContainers = rootContainers
     .append("g")
     .classed("timeContainers", true);
 
   const accuracyContainerWidth =
-    0.5 * rootContainerWidth - rootContainerPad / 2;
+    0.5 * rootContainerWidth - rootContainerHorizontalPad / 2;
   const accuracyContainerHeight = rootContainerHeight;
   const accuracyContainers = rootContainers
     .append("g")
     .attr(
       "transform",
-      `translate(${0.5 * rootContainerWidth + rootContainerPad / 2},0)`
+      `translate(${0.5 * rootContainerWidth +
+        rootContainerHorizontalPad / 2},0)`
     );
 
   rootContainers
@@ -53,7 +57,8 @@ function draw(data) {
     .attr("width", rootContainerWidth)
     .attr("height", rootContainerHeight)
     .attr("fill", "none")
-    .attr("stroke", "black");
+    .attr("stroke-width", 2)
+    .attr("stroke", "none");
 
   rootContainers
     .append("text")
@@ -85,6 +90,20 @@ function draw(data) {
     .attr("alignment-baseline", "hanging")
     .text("Time (seconds)");
 
+  svg
+    .append("text")
+    .attr(
+      "x",
+      margin.left +
+        timeContainerWidth +
+        rootContainerHorizontalPad +
+        accuracyContainerWidth / 2
+    )
+    .attr("y", 0)
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "hanging")
+    .text("Accuracy (count)");
+
   const timeEnvContainerWidth = timeContainerWidth;
   const timeEnvContainerHeight = timeContainerHeight / 3;
 
@@ -103,12 +122,51 @@ function draw(data) {
       return d[0]["group"];
     });
 
+  const accuracyEnvContainerWidth = timeContainerWidth;
+  const accuracyEnvContainerHeight = timeContainerHeight / 3;
+
+  const accuracyEnvContainers = accuracyContainers
+    .selectAll("g.timeEnvContainer")
+    .data(gArr => ["A", "B", "C"].map(g => gArr.filter(d => d.group === g)))
+    .join("g")
+    .classed("accuracyEnvContainer", "true")
+    .attr("transform", (_, i) => `translate(0,${i * timeEnvContainerHeight})`)
+    .attr("mean", data => {
+      return d3.mean(data.map(d => d.duration));
+    })
+    .attr("fill", (_, i) => d3.schemeCategory10[i])
+    .attr("stroke", (_, i) => d3.schemeCategory10[i])
+    .attr("group", d => {
+      return d[0]["group"];
+    });
+
   timeEnvContainers
     .append("rect")
     .attr("width", timeEnvContainerWidth)
     .attr("height", timeEnvContainerHeight)
     .attr("fill", "white")
     .attr("stroke", "black");
+
+  accuracyEnvContainers
+    .append("rect")
+    .attr("width", timeEnvContainerWidth)
+    .attr("height", timeEnvContainerHeight)
+    .attr("fill", "white")
+    .attr("stroke", "none");
+
+  const barWidth = accuracyEnvContainerWidth / 12;
+  accuracyEnvContainers
+    .selectAll("rect.accuracy")
+    .data(d => d.map(e => e.correctness).sort(sortByBool))
+    .join("rect")
+    .classed("accuracy", true)
+    .attr("x", (d, i) => i * barWidth)
+    .attr("width", barWidth)
+    .attr("y", 2)
+    .attr("height", accuracyEnvContainerHeight - 4)
+    .attr("stroke", "black")
+    .attr("stroke-width", 0.5)
+    .attr("fill", d => d3.schemeSet2[d ? 0 : 1]);
 
   timeEnvContainers.each(function(data) {
     const dataArr = data.map(d => d.duration);
@@ -206,6 +264,22 @@ function draw(data) {
           .tickValues(tickValues)
       );
   });
+  accuracyContainers.each(function() {
+    d3.select(this)
+      .append("g")
+      .attr("transform", `translate(0,-2)`)
+      .classed("x-axis", true)
+      .call(
+        d3.axisTop(
+          d3
+            .scaleBand()
+            .domain(d3.range(1, 13))
+            .range([0, accuracyEnvContainerWidth])
+        )
+      );
+  });
+
+  d3.selectAll("path.domain").remove();
 }
 
 export { draw };
