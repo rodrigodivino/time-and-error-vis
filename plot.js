@@ -3,7 +3,7 @@ import { getCI } from "./utils.js";
 function draw(data) {
   const width = 400;
   const height = 1400;
-  const margin = { top: 10, left: 10, right: 10, bottom: 50 };
+  const margin = { top: 40, left: 40, right: 10, bottom: 50 };
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -15,7 +15,7 @@ function draw(data) {
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  const rootContainerPad = 15;
+  const rootContainerPad = 30;
   const rootContainerWidth = innerWidth;
   const rootContainerHeight = innerHeight / 13 - rootContainerPad;
   const rootContainers = plot
@@ -55,6 +55,14 @@ function draw(data) {
     .attr("fill", "none")
     .attr("stroke", "black");
 
+  rootContainers
+    .append("text")
+    .attr("x", -margin.left / 3)
+    .attr("y", rootContainerHeight / 2)
+    .attr("alignment-baseline", "middle")
+    .attr("text-anchor", "end")
+    .text(arr => "T" + arr[0].task);
+
   timeContainers
     .append("rect")
     .attr("width", accuracyContainerWidth)
@@ -68,6 +76,14 @@ function draw(data) {
     .attr("height", timeContainerHeight)
     .attr("fill", "firebrick")
     .attr("fill-opacity", 0.2);
+
+  svg
+    .append("text")
+    .attr("x", margin.left + timeContainerWidth / 2)
+    .attr("y", 0)
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "hanging")
+    .text("Time (seconds)");
 
   const timeEnvContainerWidth = timeContainerWidth;
   const timeEnvContainerHeight = timeContainerHeight / 3;
@@ -148,111 +164,48 @@ function draw(data) {
       .join("text")
       .classed("mean", true)
       .attr("x", d => x(d3.mean(d)))
-      .attr("y", timeEnvContainerHeight / 2 + 1.2)
+      .attr("y", timeEnvContainerHeight / 2 + 1.5)
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("stroke", "none")
       .attr("fill", "black")
       .attr("font-weight", "bolder")
-      .attr("font-family", "sans-seriff")
+      .attr("font-family", "monospace")
+      .attr("font-size", "180%")
       .text(function() {
         return d3.select(this.parentNode).attr("group");
       });
   });
-  /*const violinPlotVerticalSpace = 0.8 * innerHeight;
-  const tribellVerticalSpace = 0.2 * innerHeight;
+  timeContainers.each(function() {
+    const means = [];
+    d3.select(this)
+      .selectAll("g.timeEnvContainer")
+      .each(function() {
+        means.push(parseFloat(d3.select(this).attr("mean")));
+      });
 
-  const violinPlots = rootContainers
-    .selectAll("g.violinPlotContainer")
-    .data(gArr => ["A", "B", "C"].map(g => gArr.filter(d => d.group === g)))
-    .join("g")
-    .classed("violinPlotContainer", true)
-    .attr(
-      "transform",
-      (_, i) => `translate(0,${i * (violinPlotVerticalSpace / 3)})`
-    )
-    .attr("fill", (_, i) => d3.schemeCategory10[i])
-    .attr("stroke", (_, i) => d3.schemeCategory10[i]);
-
-  const tribells = rootContainers
-    .selectAll("g.tribellContainer")
-    .data(d => [d])
-    .join("g")
-    .classed("tribellContainer", true)
-    .attr("transform", `translate(0,${violinPlotVerticalSpace})`);
-
-  const bins = 12;
-  violinPlots.each(function(data) {
-    const parentData = d3.select(this.parentNode).data()[0];
-
-    const extent = d3.extent(parentData, e => e.duration);
-    const x = d3
-      .scaleLinear()
-      .domain(extent)
-      .range([0, rootContainerWidth + rootContainerPad + 2]);
-
-    const y = d3
-      .scaleLinear()
-      .domain([0, 12])
-      .range([violinPlotVerticalSpace / 6, 0]);
-
-    const reverseY = d3
-      .scaleLinear()
-      .domain([0, 12])
-      .range([violinPlotVerticalSpace / 6, violinPlotVerticalSpace / 3]);
-
-    const max = x.domain()[1];
-    const min = x.domain()[0];
-    const step = (max - min) / bins;
-    const thresholds = d3.range(bins).map(d => min + d * step);
-    const histogram = d3
-      .histogram()
-      .domain(x.domain())
-      .thresholds(thresholds)
-      .value(d => d.duration);
+    const meanRadius = timeEnvContainerHeight / 2;
+    const tickAmount = 4;
+    const tickStep = (d3.max(means) - d3.min(means)) / tickAmount;
+    const tickValues = new Array(tickAmount + 1)
+      .fill(0)
+      .map((d, i) => d3.min(means) + i * tickStep);
 
     d3.select(this)
-      .selectAll("path.area")
-      .data([histogram(data)])
-      .join("path")
-      .classed("area", true)
-      .attr("stroke-width", 1.5)
-      .attr("fill-opacity", 0.3)
-      .attr(
-        "d",
+      .append("g")
+      .attr("transform", `translate(0,-2)`)
+      .classed("x-axis", true)
+      .call(
         d3
-          .area()
-          .x(d => x(d.x0))
-          .y0(d => reverseY(d.length) + 5)
-          .y1(d => y(d.length) - 5)
-          .curve(d3.curveMonotoneX)
+          .axisTop(
+            d3
+              .scaleLinear()
+              .domain(d3.extent(means))
+              .range([meanRadius, timeEnvContainerWidth - meanRadius])
+          )
+          .tickValues(tickValues)
       );
-
-    const barHeight = 8;
-    const arrayData = data.map(d => d.duration).sort(d3.ascending);
-    d3.select(this)
-      .selectAll("rect.violinbar")
-      .data([arrayData])
-      .join("rect")
-      .classed("violinbar", true)
-      .attr("y", y(0) - barHeight / 2)
-      .attr("x", d => x(d3.quantile(d, 0.25)))
-      .attr("width", d => x(d3.quantile(d, 0.75)) - x(d3.quantile(d, 0.25)))
-      .attr("stroke", "black")
-      .attr("fill-opacity", 0.7)
-      .attr("height", barHeight);
-
-    d3.select(this)
-      .selectAll("circle.violinmedian")
-      .data([arrayData])
-      .join("circle")
-      .classed("violinmedian", true)
-      .attr("cy", y(0))
-      .attr("cx", d => x(d3.median(d)))
-      .attr("r", barHeight / 2)
-      .attr("fill", "white")
-      .attr("stroke", "black");
-  });*/
+  });
 }
 
 export { draw };
