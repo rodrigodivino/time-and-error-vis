@@ -1,3 +1,4 @@
+/*global d3*/
 function cleanData(d) {
   return {
     group: d["Ambiente"],
@@ -17,4 +18,31 @@ function sortByBool(a, b) {
   // return (x === y)? 0 : x? 1 : -1;
 }
 
-export { cleanData, sortByBool };
+function getRandomInt(length) {
+  const min = 0;
+  const max = Math.floor(length) - 1;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function resample(arr) {
+  return arr.map(() => arr[getRandomInt(arr.length)]);
+}
+
+function boot(arr, reducer) {
+  const boots = [];
+  for (let i = 0; i < 20000; i++) {
+    boots.push(resample(arr));
+  }
+
+  return boots.map(arr => reducer(arr));
+}
+
+function getCI(arr) {
+  const means = boot(arr, d3.mean).sort(d3.ascending);
+  console.log("means", means);
+  return [d3.quantile(means, 0.025), d3.quantile(means, 0.975)];
+}
+
+window.getCI = getCI;
+
+export { cleanData, sortByBool, getCI };
