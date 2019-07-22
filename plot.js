@@ -14,7 +14,7 @@ function draw(data) {
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  const rootContainerPad = 5;
+  const rootContainerPad = 15;
   const rootContainerWidth = innerWidth;
   const rootContainerHeight = innerHeight / 13 - rootContainerPad;
   const rootContainers = plot
@@ -47,12 +47,12 @@ function draw(data) {
       `translate(${0.5 * rootContainerWidth + rootContainerPad / 2},0)`
     );
 
-  accuracyContainers
+  rootContainers
     .append("rect")
-    .attr("width", timeContainerWidth)
-    .attr("height", timeContainerHeight)
-    .attr("fill", "firebrick")
-    .attr("fill-opacity", 0.2);
+    .attr("width", rootContainerWidth)
+    .attr("height", rootContainerHeight)
+    .attr("fill", "none")
+    .attr("stroke", "black");
 
   timeContainers
     .append("rect")
@@ -61,13 +61,88 @@ function draw(data) {
     .attr("fill", "steelblue")
     .attr("fill-opacity", 0.2);
 
-  rootContainers
+  accuracyContainers
     .append("rect")
-    .attr("width", rootContainerWidth)
-    .attr("height", rootContainerHeight)
-    .attr("fill", "none")
-    .attr("stroke", "black");
+    .attr("width", timeContainerWidth)
+    .attr("height", timeContainerHeight)
+    .attr("fill", "firebrick")
+    .attr("fill-opacity", 0.2);
 
+  const timeEnvContainerWidth = timeContainerWidth;
+  const timeEnvContainerHeight = timeContainerHeight / 3;
+
+  const timeEnvContainers = timeContainers
+    .selectAll("g.timeEnvContainer")
+    .data(gArr => ["A", "B", "C"].map(g => gArr.filter(d => d.group === g)))
+    .join("g")
+    .classed("timeEnvContainer", "true")
+    .attr("transform", (_, i) => `translate(0,${i * timeEnvContainerHeight})`)
+    .attr("mean", data => {
+      return d3.mean(data.map(d => d.duration));
+    })
+    .attr("fill", (_, i) => d3.schemeCategory10[i])
+    .attr("stroke", "black")
+    .attr("group", d => {
+      return d[0]["group"];
+    });
+
+  timeEnvContainers
+    .append("rect")
+    .attr("width", timeEnvContainerWidth)
+    .attr("height", timeEnvContainerHeight)
+    .attr("fill", "snow");
+
+  timeEnvContainers.each(function(data) {
+    const dataArr = data.map(d => d.duration);
+    const means = [];
+    d3.select(this.parentNode)
+      .selectAll("g.timeEnvContainer")
+      .each(function() {
+        means.push(parseFloat(d3.select(this).attr("mean")));
+      });
+    const ext = d3.extent(means);
+
+    const meanRadius = timeEnvContainerHeight / 2;
+    const x = d3
+      .scaleLinear()
+      .domain(ext)
+      .range([meanRadius, timeEnvContainerWidth - meanRadius]);
+
+    d3.select(this)
+      .selectAll("rect.ci")
+      .data([dataArr])
+      .join("rect")
+      .each(function(arr) {
+        console.log(arr);
+      });
+
+    d3.select(this)
+      .selectAll("circle.mean")
+      .data([dataArr])
+      .join("circle")
+      .attr("fill-opacity", 0.5)
+      .classed("mean", true)
+      .attr("r", meanRadius)
+      .attr("cx", d => x(d3.mean(d)))
+      .attr("cy", timeEnvContainerHeight / 2);
+
+    d3.select(this)
+      .selectAll("text.mean")
+      .data([dataArr])
+      .join("text")
+      .classed("mean", true)
+      .attr("x", d => x(d3.mean(d)))
+      .attr("y", timeEnvContainerHeight / 2 + 1.2)
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "middle")
+      .attr("stroke", "none")
+      .attr("fill", "black")
+      .attr("font-weight", "bolder")
+      .attr("font-family", "sans-seriff")
+      .text(function() {
+        return d3.select(this.parentNode).attr("group");
+      });
+  });
   /*const violinPlotVerticalSpace = 0.8 * innerHeight;
   const tribellVerticalSpace = 0.2 * innerHeight;
 
