@@ -1,7 +1,7 @@
-import { sortByBool } from "./utils.js";
+/* global d3 */
 function draw(data) {
-  const width = 1000;
-  const height = 300;
+  const width = 200;
+  const height = 1000;
   const margin = { top: 10, left: 10, right: 10, bottom: 50 };
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
@@ -14,64 +14,64 @@ function draw(data) {
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  const verticalContainerPad = 5;
-  const verticalContainerWidth = innerWidth / 13 - verticalContainerPad;
-  const verticalContainerHeight = innerHeight;
-  const verticalContainers = plot
-    .selectAll("g.verticalContainer")
+  const rootContainerPad = 5;
+  const rootContainerWidth = innerWidth;
+  const rootContainerHeight = innerHeight / 13 - rootContainerPad;
+  const rootContainers = plot
+    .selectAll("g.rootContainer")
     .data(
       [1, 3, 2, 5, 4, 6, 7, 8, 9, 10, 11, 12, 13].map(t =>
         data.filter(d => d.task === t)
       )
     )
     .join("g")
-    .classed("verticalContainer", true)
+    .classed("rootContainer", true)
     .attr(
       "transform",
-      (_, i) =>
-        `translate(${i * (verticalContainerWidth + verticalContainerPad)},0)`
+      (_, i) => `translate(0,${i * (rootContainerHeight + rootContainerPad)})`
     );
 
-  const timeContainerWidth = verticalContainerWidth;
-  const timeContainerHeight =
-    0.5 * verticalContainerHeight - verticalContainerPad / 2;
-  const timeContainers = verticalContainers
+  const timeContainerWidth = 0.5 * rootContainerWidth - rootContainerPad / 2;
+  const timeContainerHeight = rootContainerHeight;
+  const timeContainers = rootContainers
     .append("g")
     .classed("timeContainers", true);
 
-  const accuracyContainerWidth = verticalContainerWidth;
-  const accuracyContainerHeight =
-    0.5 * verticalContainerHeight - verticalContainerPad / 2;
-  const accuracyContainers = verticalContainers
+  const accuracyContainerWidth =
+    0.5 * rootContainerWidth - rootContainerPad / 2;
+  const accuracyContainerHeight = rootContainerHeight;
+  const accuracyContainers = rootContainers
     .append("g")
     .attr(
       "transform",
-      `translate(0,${0.5 * verticalContainerHeight + verticalContainerPad / 2})`
+      `translate(${0.5 * rootContainerWidth + rootContainerPad / 2},0)`
     );
 
   accuracyContainers
     .append("rect")
     .attr("width", timeContainerWidth)
     .attr("height", timeContainerHeight)
-    .attr("fill", "firebrick");
+    .attr("fill", "firebrick")
+    .attr("fill-opacity", 0.2);
 
   timeContainers
     .append("rect")
     .attr("width", accuracyContainerWidth)
     .attr("height", accuracyContainerHeight)
-    .attr("fill", "steelblue");
+    .attr("fill", "steelblue")
+    .attr("fill-opacity", 0.2);
 
-  verticalContainers
+  rootContainers
     .append("rect")
-    .attr("width", verticalContainerWidth)
-    .attr("height", innerHeight)
+    .attr("width", rootContainerWidth)
+    .attr("height", rootContainerHeight)
     .attr("fill", "none")
     .attr("stroke", "black");
 
-  const violinPlotVerticalSpace = 0.8 * innerHeight;
+  /*const violinPlotVerticalSpace = 0.8 * innerHeight;
   const tribellVerticalSpace = 0.2 * innerHeight;
 
-  const violinPlots = verticalContainers
+  const violinPlots = rootContainers
     .selectAll("g.violinPlotContainer")
     .data(gArr => ["A", "B", "C"].map(g => gArr.filter(d => d.group === g)))
     .join("g")
@@ -83,7 +83,7 @@ function draw(data) {
     .attr("fill", (_, i) => d3.schemeCategory10[i])
     .attr("stroke", (_, i) => d3.schemeCategory10[i]);
 
-  const tribells = verticalContainers
+  const tribells = rootContainers
     .selectAll("g.tribellContainer")
     .data(d => [d])
     .join("g")
@@ -98,7 +98,7 @@ function draw(data) {
     const x = d3
       .scaleLinear()
       .domain(extent)
-      .range([0, verticalContainerWidth + verticalContainerPad + 2]);
+      .range([0, rootContainerWidth + rootContainerPad + 2]);
 
     const y = d3
       .scaleLinear()
@@ -161,7 +161,7 @@ function draw(data) {
       .attr("r", barHeight / 2)
       .attr("fill", "white")
       .attr("stroke", "black");
-  });
+  });*/
 }
 
 export { draw };
